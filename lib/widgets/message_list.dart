@@ -358,12 +358,40 @@ class MessageListAppBarTitle extends StatelessWidget {
 
       case DmNarrow(:var otherRecipientIds):
         final store = PerAccountStoreWidget.of(context);
-        if (otherRecipientIds.isEmpty) {
-          return const Text("DMs with yourself");
-        } else {
-          final names = otherRecipientIds.map((id) => store.users[id]?.fullName ?? '(unknown user)');
-          return Text("DMs with ${names.join(", ")}"); // TODO show avatars
-        }
+        return Row(
+          children: [
+            if (otherRecipientIds.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Avatar(
+                  size: 35,
+                  borderRadius: 32 / 8,
+                  userId: store.selfUserId,
+                ),
+              )
+            else
+              ...otherRecipientIds.map(
+                    (id) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Avatar(
+                    size: 35,
+                    borderRadius: 32 / 8,
+                    userId: id,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: Text(
+                otherRecipientIds.isEmpty
+                    ? store.users[store.selfUserId]?.fullName ?? '(unknown user)'
+                    : otherRecipientIds
+                    .map((id) => store.users[id]?.fullName ?? '(unknown user)')
+                    .join(", "),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
     }
   }
 }
