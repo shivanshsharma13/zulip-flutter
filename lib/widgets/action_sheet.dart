@@ -64,6 +64,20 @@ void _showActionSheet(
     });
 }
 
+/// A button in an action sheet.
+///
+/// When built from server data, the action sheet ignores changes in that data;
+/// we intentionally don't live-update the buttons on events.
+/// If a button's label, action, or position changes suddenly,
+/// it can be confusing and make the on-tap behavior unexpected.
+/// Better to let the user decide to tap
+/// based on information that's comfortably in their working memory,
+/// even if we sometimes have to explain (where we handle the tap)
+/// that that information has changed and they need to decide again.
+///
+/// (Even if we did live-update the buttons, it's possible anyway that a user's
+/// action can race with a change that's already been applied on the server,
+/// because it takes some time for the server to report changes to us.)
 abstract class ActionSheetMenuItemButton extends StatelessWidget {
   const ActionSheetMenuItemButton({super.key, required this.pageContext});
 
@@ -151,7 +165,7 @@ class ActionSheetCancelButton extends StatelessWidget {
 /// Show a sheet of actions you can take on a topic.
 void showTopicActionSheet(BuildContext context, {
   required int channelId,
-  required String topic,
+  required TopicName topic,
 }) {
   final store = PerAccountStoreWidget.of(context);
   final subscription = store.subscriptions[channelId];
@@ -633,6 +647,7 @@ class QuoteAndReplyButton extends MessageActionSheetMenuItemButton {
 
   @override void onPressed() async {
     final zulipLocalizations = ZulipLocalizations.of(pageContext);
+    final message = this.message;
 
     var composeBoxController = findMessageListPage().composeBoxController;
     // The compose box doesn't null out its controller; it's either always null
@@ -644,7 +659,7 @@ class QuoteAndReplyButton extends MessageActionSheetMenuItemButton {
       && composeBoxController.topic.textNormalized == kNoTopicTopic
       && message is StreamMessage
     ) {
-      composeBoxController.topic.value = TextEditingValue(text: message.topic);
+      composeBoxController.topic.setTopic(message.topic);
     }
 
     // This inserts a "[Quoting…]" placeholder into the content input,
